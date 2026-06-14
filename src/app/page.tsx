@@ -2,269 +2,357 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Check, FileText, Briefcase, ArrowUpRight, Mail, Phone } from 'lucide-react';
+import { Mail, Phone, ChevronUp, Send, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent as logEvent } from '@/lib/analytics';
 
-const titles = ['Project Manager', 'Marketing Strategist', 'AI & Tech Consultant'];
+const titles = [
+  'Project Manager',
+  'Marketing Strategist',
+  'AI & Tech Consultant',
+  'Senior Account Manager',
+  'Mega Events Specialist',
+];
 
 const LOGOS = [
   'DCT Abu Dhabi',
   'DET Dubai',
   'Expo 2020',
   'Formula 1',
-  'EA Sports',
-  'Sony',
-  'McCann'
+  'Red Bull',
+  'ESPN',
 ];
 
 export default function Home() {
-  const [index, setIndex] = useState(0);
-  const [copied, setCopied] = useState(false);
+  const [titleIndex, setTitleIndex] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [formState, setFormState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+
   const email = 'amrsamiredris@gmail.com';
   const phone = '+971 54 219 1028';
   const linkedin = 'linkedin.com/in/amrsamiredris';
 
-  // Dynamic Typography Loop
+  // Rotate subtitles
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % titles.length);
-    }, 3200);
+      setTitleIndex((prev) => (prev + 1) % titles.length);
+    }, 2500);
     return () => clearInterval(interval);
   }, []);
 
   // Track Home page visits
   useEffect(() => {
-    trackEvent('home_visits');
+    logEvent('home_visits');
   }, []);
 
-  const handleCopyEmail = async () => {
+  // Scroll listener for scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Contact Formspree submit handler
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormState('loading');
+
+    const formspreeId = process.env.NEXT_PUBLIC_FORMSPREE_ID || 'REPLACE_WITH_YOUR_ID';
+    const formAction = `https://formspree.io/f/${formspreeId}`;
+
     try {
-      await navigator.clipboard.writeText(email);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      const response = await fetch(formAction, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setFormState('success');
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        setFormState('error');
+      }
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      console.error('Form submission failed:', err);
+      setFormState('error');
     }
   };
 
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-16">
-      {/* Contact Card Container */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-xl bg-zinc-900/30 backdrop-blur-xl border border-zinc-800/80 rounded-2xl p-6 md:p-10 shadow-2xl shadow-zinc-950/80 flex flex-col items-center text-center relative overflow-hidden"
-      >
-        {/* Ambient Glow effect inside the card */}
-        <div className="absolute -top-20 -left-20 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-violet-400/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="w-full flex flex-col items-center">
+      {/* 1. HERO SECTION */}
+      <section className="w-full min-h-[100dvh] flex flex-col justify-center items-center py-20 px-4 text-center relative overflow-hidden">
+        {/* Decorative background glows */}
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Pulsing Available Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900/40 border border-zinc-800 rounded-full text-[10px] md:text-xs text-zinc-400 font-medium mb-6 md:mb-8 hover:border-zinc-700 transition-colors">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          Available for select Q3 2026 Strategy Advisory
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-4xl mx-auto flex flex-col items-center"
+        >
+          {/* Subtitle Rotator */}
+          <div className="h-8 mb-4 flex items-center justify-center overflow-hidden relative w-full">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={titleIndex}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="absolute text-blue-500 font-bold text-xs md:text-sm tracking-[0.2em] uppercase"
+              >
+                {titles[titleIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </div>
 
-        {/* User Image Profile Silhouette */}
-        <div className="w-20 h-20 rounded-full border border-zinc-800 bg-zinc-900/80 flex items-center justify-center text-2xl font-bold text-zinc-300 shadow-inner mb-6">
-          ASE
-        </div>
+          {/* Heading */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tighter leading-none mb-6 text-[var(--text-primary)]">
+            Amr Samir Edris
+          </h1>
 
-        {/* Amr Samir Edris Name Header */}
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-100 mb-1">
-          Amr Samir Edris
-        </h1>
+          {/* Subtitle paragraph */}
+          <p className="text-base md:text-lg text-[var(--text-secondary)] max-w-xl mx-auto mb-8 leading-relaxed">
+            Senior Account Manager specializing in Mega Events & Large-Scale Productions. Empowering brand ecosystems through structured execution.
+          </p>
 
-        {/* Title/Subtitle designation */}
-        <h2 className="text-xs font-semibold text-zinc-400 max-w-xs mb-3">
-          Senior Account Manager | Mega Events & Large-Scale Productions
-        </h2>
-
-        {/* Framer Motion Title Rotator */}
-        <div className="h-8 flex items-center justify-center mb-6 overflow-hidden relative w-full">
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={index}
-              initial={{ y: 15, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -15, opacity: 0 }}
-              transition={{ duration: 0.4, ease: 'easeInOut' }}
-              className="absolute text-violet-400 text-sm md:text-base font-semibold tracking-wide"
+          {/* Contact Row */}
+          <div className="flex flex-wrap justify-center items-center gap-6 text-sm mb-12 text-[var(--text-secondary)]">
+            <a
+              href={`mailto:${email}`}
+              className="flex items-center gap-2 hover:text-blue-500 transition-colors"
             >
-              {titles[index]}
-            </motion.span>
-          </AnimatePresence>
-        </div>
-
-        {/* Contact info list items */}
-        <div className="flex flex-col gap-2 w-full max-w-xs border-y border-zinc-850/60 py-4 mb-8 text-xs text-zinc-400 text-left">
-          <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-zinc-550 shrink-0" />
-            <span className="font-mono">{email}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-zinc-550 shrink-0" />
-            <span className="font-mono">{phone}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-zinc-550 shrink-0 fill-current" viewBox="0 0 24 24">
-              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-            </svg>
+              <Mail className="w-4 h-4 text-blue-500" />
+              <span className="font-mono">{email}</span>
+            </a>
+            <a
+              href={`tel:${phone}`}
+              className="flex items-center gap-2 hover:text-blue-500 transition-colors"
+            >
+              <Phone className="w-4 h-4 text-blue-500" />
+              <span className="font-mono">{phone}</span>
+            </a>
             <a
               href={`https://${linkedin}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-violet-400 transition-colors font-mono"
+              className="flex items-center gap-2 hover:text-blue-500 transition-colors"
             >
-              {linkedin}
+              <svg className="w-4 h-4 text-blue-500 fill-current" viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+              </svg>
+              <span className="font-mono">{linkedin}</span>
             </a>
           </div>
-        </div>
 
-        {/* Action Buttons Row */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full justify-center items-center">
-          {/* Copy Email Button */}
-          <button
-            onClick={handleCopyEmail}
-            className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs md:text-sm font-medium border border-zinc-800/80 hover:border-zinc-700/80 bg-zinc-950/50 hover:bg-zinc-900/60 transition-all duration-300 text-zinc-300 active:scale-98 min-w-[140px]"
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              {copied ? (
-                <motion.span
-                  key="copied"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1.5 text-emerald-400"
-                >
-                  <Check className="w-4 h-4" />
-                  Copied!
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="copy"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1.5"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copy Email
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
-
-          {/* CV CTA */}
-          <Link
-            href="/cv"
-            className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs md:text-sm font-medium border border-zinc-800/80 bg-zinc-950/50 hover:border-violet-500/30 hover:bg-violet-950/10 hover:text-violet-400 transition-all duration-300 text-zinc-300"
-          >
-            <FileText className="w-4 h-4" />
-            <span>Read CV</span>
-            <ArrowUpRight className="w-3.5 h-3.5 opacity-60" />
-          </Link>
-
-          {/* Portfolio CTA */}
-          <Link
-            href="/portfolio"
-            className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs md:text-sm font-medium border border-zinc-800/80 bg-zinc-950/50 hover:border-violet-500/30 hover:bg-violet-950/10 hover:text-violet-400 transition-all duration-300 text-zinc-300"
-          >
-            <Briefcase className="w-4 h-4" />
-            <span>Portfolio</span>
-            <ArrowUpRight className="w-3.5 h-3.5 opacity-60" />
-          </Link>
-        </div>
-      </motion.div>
-
-      {/* Bento Grid Highlights */}
-      <div className="w-full max-w-xl mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Box 1 (Impact Metric) */}
-        <div className="bg-zinc-900/20 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between min-h-[140px] text-left">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-violet-400">Project Leadership</span>
-          <div>
-            <h3 className="text-3xl font-extrabold text-zinc-100 mt-2">$10M+</h3>
-            <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-              Budget Managed &bull; Global multi-industry campaign cycles
-            </p>
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center max-w-md">
+            <Link
+              href="/cv"
+              className="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-blue-500/20 text-center active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+            >
+              View CV
+            </Link>
+            <Link
+              href="/portfolio"
+              className="px-8 py-3.5 border border-blue-600/60 hover:border-blue-500 text-blue-500 hover:bg-blue-500/5 font-semibold rounded-xl text-sm transition-all text-center active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+            >
+              View Portfolio
+            </Link>
           </div>
-        </div>
+        </motion.div>
+      </section>
 
-        {/* Box 2 (Operator Stack) */}
-        <div className="bg-zinc-900/20 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between min-h-[140px] text-left">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Operator Stack</span>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {[
-              'Next.js', 
-              'OpenAI API', 
-              'Run-of-Show Design', 
-              'Budgeting & BOQs', 
-              'Stakeholder Alignment', 
-              'CRM Systems'
-            ].map((tech) => (
-              <span key={tech} className="px-2 py-0.5 bg-zinc-950 border border-zinc-850 rounded text-[9px] text-zinc-300 font-medium">
-                {tech}
-              </span>
-            ))}
-          </div>
-        </div>
+      {/* 2. LOGO TICKER STRIP */}
+      <section className="w-full bg-[var(--bg-secondary)]/30 border-y border-[var(--border)] py-12 overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-24 h-full bg-gradient-to-r from-[var(--bg-primary)] to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-24 h-full bg-gradient-to-l from-[var(--bg-primary)] to-transparent z-10 pointer-events-none" />
 
-        {/* Box 3 (Case Study Teaser) */}
-        <Link
-          href="/portfolio"
-          className="sm:col-span-2 bg-zinc-900/20 backdrop-blur-sm border border-zinc-800 hover:border-violet-500/30 rounded-2xl p-6 flex items-center justify-between group transition-all duration-300 min-h-[80px]"
-        >
-          <div className="text-left max-w-[85%]">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Case Study Highlight</span>
-            <h4 className="text-xs md:text-sm font-semibold text-zinc-200 group-hover:text-violet-400 transition-colors mt-0.5 leading-relaxed">
-              DEF GameExpo 2026 &mdash; Reached 30,000+ physical attendees and 500,000+ online viewers in partnership with DET/Visit Dubai. Click to view full portfolio.
-            </h4>
-          </div>
-          <div className="p-2 bg-zinc-950 border border-zinc-850 group-hover:border-violet-500/20 rounded-xl transition-all duration-300 shrink-0">
-            <ArrowUpRight className="w-4 h-4 text-zinc-400 group-hover:text-violet-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-          </div>
-        </Link>
-      </div>
-
-      {/* Infinite Logo Ticker Section */}
-      <div className="w-full max-w-4xl mt-20 md:mt-24 px-4 overflow-hidden relative">
-        {/* Soft edge masking for smooth fade-in and fade-out at borders */}
-        <div className="absolute top-0 left-0 w-16 md:w-32 h-full bg-gradient-to-r from-zinc-950 to-transparent z-10 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-16 md:w-32 h-full bg-gradient-to-l from-zinc-950 to-transparent z-10 pointer-events-none" />
-
-        <p className="text-center text-[10px] uppercase tracking-[0.2em] text-zinc-600 mb-6 font-semibold">
-          Powering ecosystems at leading networks
-        </p>
-
-        {/* Marquee viewport */}
-        <div className="flex w-full overflow-hidden py-4 border-y border-zinc-900/60">
-          <div className="animate-marquee flex gap-12 items-center">
+        <div className="w-full overflow-hidden">
+          <div className="ticker-track flex items-center gap-8">
             {/* Set 1 */}
             {LOGOS.map((logo, idx) => (
               <div
                 key={`logo-1-${idx}`}
-                className="bg-zinc-900/40 border border-zinc-800 text-zinc-450 font-medium px-4 py-2 rounded-md mx-2 uppercase tracking-wider text-[10px] md:text-xs whitespace-nowrap hover:text-zinc-200 hover:border-zinc-700 transition-all cursor-default"
+                className="bg-[var(--glass)] border border-[var(--border)] backdrop-blur-md px-6 py-3 rounded-xl text-xs md:text-sm font-semibold tracking-wider text-[var(--text-primary)] hover:border-blue-500/30 transition-all cursor-default"
               >
+                {/* Replace text with <img> tags when /public/logos/ PNG files are added */}
                 {logo}
               </div>
             ))}
-            {/* Set 2 (for seamless looping wrapper) */}
+            {/* Set 2 (for seamless loop) */}
             {LOGOS.map((logo, idx) => (
               <div
                 key={`logo-2-${idx}`}
-                className="bg-zinc-900/40 border border-zinc-800 text-zinc-450 font-medium px-4 py-2 rounded-md mx-2 uppercase tracking-wider text-[10px] md:text-xs whitespace-nowrap hover:text-zinc-200 hover:border-zinc-700 transition-all cursor-default"
+                className="bg-[var(--glass)] border border-[var(--border)] backdrop-blur-md px-6 py-3 rounded-xl text-xs md:text-sm font-semibold tracking-wider text-[var(--text-primary)] hover:border-blue-500/30 transition-all cursor-default"
               >
+                {/* Replace text with <img> tags when /public/logos/ PNG files are added */}
                 {logo}
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* 3. HIGHLIGHT CARDS */}
+      <section className="w-full max-w-4xl py-24 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-8"
+        >
+          {/* Card 1 */}
+          <div className="bg-[var(--glass)] border border-[var(--border)] backdrop-blur-md rounded-2xl p-8 flex flex-col justify-between min-h-[200px] hover:border-blue-500/25 transition-all">
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-blue-500">Project Operations</span>
+            <div>
+              <h3 className="text-5xl font-black tracking-tight text-[var(--text-primary)] mt-2">$10M+</h3>
+              <p className="text-sm text-[var(--text-secondary)] mt-2 leading-relaxed">
+                Budgets Managed. Structured end-to-end financial oversight and vendor procurement across multiple mega-scale project runs.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 2 */}
+          <div className="bg-[var(--glass)] border border-[var(--border)] backdrop-blur-md rounded-2xl p-8 flex flex-col justify-between min-h-[200px] hover:border-blue-500/25 transition-all">
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-blue-500">Global Execution</span>
+            <div>
+              <h3 className="text-5xl font-black tracking-tight text-[var(--text-primary)] mt-2">50+</h3>
+              <p className="text-sm text-[var(--text-secondary)] mt-2 leading-relaxed">
+                Events Delivered. Orchestrated global entertainment projects, sports tournaments, and live broadcast events with massive footfall.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* 4. CONTACT FORM */}
+      <section className="w-full max-w-lg py-24 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+          className="bg-[var(--glass)] border border-[var(--border)] backdrop-blur-md rounded-2xl p-8 shadow-xl"
+        >
+          <h2 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight mb-2">
+            Get in Touch
+          </h2>
+          <p className="text-xs text-[var(--text-secondary)] mb-6">
+            Have an upcoming project or deployment? Submit details below to coordinate.
+          </p>
+
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Name"
+                className="w-full px-4 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-blue-500/30 focus:border-blue-500 focus:outline-none rounded-xl text-sm text-[var(--text-primary)] transition-all"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@example.com"
+                className="w-full px-4 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-blue-500/30 focus:border-blue-500 focus:outline-none rounded-xl text-sm text-[var(--text-primary)] transition-all"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="message" className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                Message
+              </label>
+              <textarea
+                id="message"
+                required
+                rows={4}
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                placeholder="Write your message..."
+                className="w-full px-4 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-blue-500/30 focus:border-blue-500 focus:outline-none rounded-xl text-sm text-[var(--text-primary)] transition-all resize-none"
+              />
+            </div>
+
+            {formState === 'success' && (
+              <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>Thank you! Your message has been sent successfully.</span>
+              </div>
+            )}
+
+            {formState === 'error' && (
+              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>Submission failed. Please try again.</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={formState === 'loading'}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white font-semibold rounded-xl text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
+            >
+              {formState === 'loading' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Send Message
+                </>
+              )}
+            </button>
+          </form>
+        </motion.div>
+      </section>
+
+      {/* 5. SCROLL TO TOP BUTTON */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={handleScrollToTop}
+            className="fixed bottom-8 right-8 z-50 p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg cursor-pointer outline-none active:scale-95 transition-all"
+            aria-label="Scroll to top"
+          >
+            <ChevronUp className="w-5 h-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

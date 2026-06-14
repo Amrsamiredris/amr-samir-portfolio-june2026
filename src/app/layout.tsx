@@ -1,22 +1,18 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import Navigation from '@/components/Navigation';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import Script from 'next/script';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
   subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
-  title: 'Amr Samir Edris — Portfolio',
-  description: 'Premium personal portfolio and analytics tracking dashboard for Amr Samir Edris, Senior Account Manager specializing in Mega Events & Large-Scale Productions.',
+  title: 'Amr Samir Edris',
+  description: 'Senior Account Manager | Mega Events & Large-Scale Productions',
 };
 
 export default function RootLayout({
@@ -27,14 +23,10 @@ export default function RootLayout({
   const clarityId = process.env.NEXT_PUBLIC_CLARITY_ID;
 
   return (
-    <html lang="en" className="h-full dark">
+    <html lang="en" className="h-full">
       <head>
-        {/* 
-          MICROSOFT CLARITY TRACKING PIXEL
-          Conditionally injected only if NEXT_PUBLIC_CLARITY_ID is set.
-        */}
         {clarityId && (
-          <Script id="microsoft-clarity-pixel" strategy="afterInteractive">
+          <Script id="microsoft-clarity" strategy="afterInteractive">
             {`
               (function(c,l,a,r,i,t,y){
                   c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -46,15 +38,17 @@ export default function RootLayout({
         )}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-violet-500/30 selection:text-violet-200`}
+        className={`${inter.variable} antialiased min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col`}
       >
-        <Navigation />
-        <main className="flex-1 flex flex-col w-full max-w-7xl mx-auto px-4 md:px-8 py-8">
-          {children}
-        </main>
-        <footer className="w-full text-center py-8 text-xs text-zinc-600 border-t border-zinc-900 mt-auto">
-          <p>© {new Date().getFullYear()} Amr Samir. Built with Next.js & Framer Motion.</p>
-        </footer>
+        <ThemeProvider>
+          <Navigation />
+          <main className="flex-1 flex flex-col w-full max-w-7xl mx-auto px-4 md:px-8 py-8">
+            {children}
+          </main>
+          <footer className="w-full text-center py-8 text-xs text-[var(--text-secondary)] border-t border-[var(--border)] mt-auto bg-[var(--bg-secondary)]/30">
+            <p>© {new Date().getFullYear()} Amr Samir Edris. All rights reserved.</p>
+          </footer>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -4,27 +4,31 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Download, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { usePageTimer } from '@/hooks/usePageTimer';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent as logEvent } from '@/lib/analytics';
 import { motion } from 'framer-motion';
 
 export default function CVPage() {
-  // Activate time-on-page telemetry tracking
+  // Activate page duration tracking
   usePageTimer('cv');
 
   const [iframeError, setIframeError] = useState(false);
   const [checking, setChecking] = useState(true);
+  const cvUrl = process.env.NEXT_PUBLIC_CV_URL || '/cv.pdf';
 
-  // Track initial page view event and verify if PDF exists
+  // Log cv views on mount and check document accessibility
   useEffect(() => {
-    trackEvent('cv_views');
+    logEvent('cv_views');
 
     async function checkPdfExists() {
       try {
-        const res = await fetch('/cv.pdf', { method: 'HEAD' });
-        if (!res.ok) {
-          setIframeError(true);
+        if (!cvUrl.startsWith('http')) {
+          const res = await fetch(cvUrl, { method: 'HEAD' });
+          if (!res.ok) {
+            setIframeError(true);
+          }
         }
-      } catch {
+      } catch (err) {
+        console.error('Error verifying document path:', err);
         setIframeError(true);
       } finally {
         setChecking(false);
@@ -32,75 +36,84 @@ export default function CVPage() {
     }
 
     checkPdfExists();
-  }, []);
+  }, [cvUrl]);
 
   const handleDownloadClick = () => {
-    trackEvent('cv_downloads');
+    logEvent('cv_downloads');
   };
 
   return (
     <div className="flex-1 flex flex-col gap-6">
-      {/* Header Panel */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+      {/* Navigation and Actions Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mb-2 group"
+            className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-2 group"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             Back to Home
           </Link>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-100">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
             Curriculum Vitae
           </h1>
-          <p className="text-zinc-550 text-xs md:text-sm mt-1">
-            Review professional credentials, timelines, and specialized capabilities.
+          <p className="text-[var(--text-secondary)] text-xs md:text-sm mt-1">
+            Review professional credentials, project histories, and operations overview.
           </p>
         </div>
 
-        {/* Download Call-to-Action */}
+        {/* Action button */}
         <a
-          href="/cv.pdf"
+          href={cvUrl}
           download="Amr_Samir_Edris_CV.pdf"
           onClick={handleDownloadClick}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-zinc-100 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 shadow-lg shadow-violet-950/20 active:scale-98"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 shadow-lg shadow-blue-500/20 active:scale-95 cursor-pointer"
         >
           <Download className="w-4 h-4" />
-          Download PDF
+          Download CV
         </a>
       </div>
 
-      {/* Interactive Frame Wrapper */}
+      {/* Main Document Display */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="flex-1 min-h-[600px] h-[75vh] w-full rounded-2xl border border-zinc-900 bg-zinc-950 overflow-hidden relative shadow-2xl flex flex-col"
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="flex-1 min-h-[500px] w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)]/10 overflow-hidden relative shadow-2xl flex flex-col"
+        style={{ height: 'calc(100vh - 80px)' }}
       >
         {checking ? (
-          <div className="flex-1 flex items-center justify-center bg-zinc-950">
+          <div className="flex-1 flex items-center justify-center bg-[var(--bg-primary)]">
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
-              <p className="text-xs text-zinc-650 font-medium">Verifying assets...</p>
+              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+              <p className="text-xs text-[var(--text-secondary)] font-medium">Resolving document assets...</p>
             </div>
           </div>
         ) : iframeError ? (
-          <div className="flex-1 flex items-center justify-center text-center p-8 bg-zinc-900/10 backdrop-blur-sm">
+          <div className="flex-1 flex items-center justify-center text-center p-8 bg-[var(--bg-secondary)]/25 backdrop-blur-md">
             <div className="flex flex-col items-center gap-4 max-w-sm">
-              <div className="p-3 bg-zinc-950/80 border border-zinc-850 rounded-full">
-                <AlertCircle className="w-6 h-6 text-amber-400" />
+              <div className="p-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-full">
+                <AlertCircle className="w-6 h-6 text-amber-500" />
               </div>
-              <h3 className="text-zinc-200 font-bold text-base">Document Preview Initializing...</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                If the preview does not render automatically, please click the primary download button above to retrieve the file directly.
+              <h3 className="text-[var(--text-primary)] font-bold text-base">Preview Temporarily Unavailable</h3>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                We encountered an issue preparing the inline document. Please download the file directly using the button above.
               </p>
+              <a
+                href={cvUrl}
+                download="Amr_Samir_Edris_CV.pdf"
+                onClick={handleDownloadClick}
+                className="inline-flex items-center gap-1.5 text-xs text-blue-500 hover:underline font-semibold"
+              >
+                Download directly
+              </a>
             </div>
           </div>
         ) : (
           <iframe
-            src="/cv.pdf#toolbar=0"
-            className="w-full h-full border-none rounded-2xl flex-1"
-            title="Amr Samir Edris CV Document"
+            src={`${cvUrl}#toolbar=0`}
+            className="w-full h-full border-none rounded-2xl flex-1 bg-[var(--bg-primary)]"
+            title="Amr Samir Edris CV"
           />
         )}
       </motion.div>
