@@ -75,3 +75,7 @@ body {
 .scroll-to-top-btn {
   transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
 }
+
+.cache-bust-2026-06-15-11-48 {
+  content: "bust";
+}
