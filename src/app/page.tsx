@@ -212,8 +212,7 @@ export default function Home() {
       <section className="w-full max-w-4xl py-24 px-4">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
+          whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.6 }}
           className="grid grid-cols-1 md:grid-cols-2 gap-8"
         >
@@ -245,8 +244,7 @@ export default function Home() {
       <section className="w-full max-w-lg py-24 px-4">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
+          whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.6 }}
           className="bg-[var(--glass)] border border-[var(--border)] backdrop-blur-md rounded-2xl p-8 shadow-xl"
         >
